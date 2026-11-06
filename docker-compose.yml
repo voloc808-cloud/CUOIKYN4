@@ -1,0 +1,77 @@
+name: pims
+
+x-service-common: &service-common
+  restart: unless-stopped
+  networks: [pims-net]
+  depends_on:
+    sqlserver-init:
+      condition: service_completed_successfully
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pims_Strong_Passw0rd!}
+    volumes: [sqlserver-data:/var/opt/mssql]
+    networks: [pims-net]
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $${MSSQL_SA_PASSWORD} -C -Q 'SELECT 1' || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  sqlserver-init:
+    image: mcr.microsoft.com/mssql-tools:latest
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pims_Strong_Passw0rd!}
+    volumes: [./docker/sqlserver/init.sql:/init.sql:ro]
+    command: /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P $${MSSQL_SA_PASSWORD} -C -i /init.sql
+    networks: [pims-net]
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  auth-service:
+    <<: *service-common
+    build: {context: ., dockerfile: services/auth-service/Dockerfile}
+    env_file: services/auth-service/.env
+    expose: [8000]
+
+  catalog-service:
+    <<: *service-common
+    build: {context: ., dockerfile: services/catalog-service/Dockerfile}
+    env_file: services/catalog-service/.env
+    expose: [8000]
+
+  inventory-service:
+    <<: *service-common
+    build: {context: ., dockerfile: services/inventory-service/Dockerfile}
+    env_file: services/inventory-service/.env
+    expose: [8000]
+
+  prescription-service:
+    <<: *service-common
+    build: {context: ., dockerfile: services/prescription-service/Dockerfile}
+    env_file: services/prescription-service/.env
+    expose: [8000]
+
+  report-service:
+    <<: *service-common
+    build: {context: ., dockerfile: services/report-service/Dockerfile}
+    env_file: services/report-service/.env
+    expose: [8000]
+
+  gateway:
+    <<: *service-common
+    build: {context: ., dockerfile: gateway/Dockerfile}
+    env_file: gateway/.env
+    ports: [${GATEWAY_PORT:-8080}:8000]
+
+networks:
+  pims-net:
+    driver: bridge
+
+volumes:
+  sqlserver-data:
