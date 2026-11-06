@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info: {title: PIMS Prescription Service API, version: 1.0.0}
+servers: [{url: 'http://prescription-service:8000'}]
+security: [{bearerAuth: []}]
+paths:
+  /internal/v1/reports/prescriptions:
+    get: {operationId: internalPrescriptionReport, responses: {'200': {description: Read-only prescription report data}}}
+  /health:
+    get: {security: [], operationId: health, responses: {'200': {description: Healthy}, '503': {description: Database unavailable}}}
+  /api/v1/prescriptions:
+    get: {operationId: listPrescriptions, description: Doctors only receive their own prescriptions., responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createPrescription, responses: {'201': {$ref: '#/components/responses/Success'}, '422': {$ref: '#/components/responses/Error'}}}
+  /api/v1/prescriptions/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get: {operationId: getPrescription, responses: {'200': {$ref: '#/components/responses/Success'}, '404': {$ref: '#/components/responses/Error'}}}
+  /api/v1/prescriptions/{id}/approve:
+    post:
+      operationId: approvePrescription
+      description: Runs stock check, FEFO deduction, status update and compensation Saga.
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+        '422': {description: INVALID_STATUS_TRANSITION or INSUFFICIENT_STOCK}
+        '503': {description: Inventory service unavailable}
+  /api/v1/prescriptions/{id}/reject:
+    post:
+      operationId: rejectPrescription
+      parameters: [{$ref: '#/components/parameters/Id'}]
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+        '422': {description: INVALID_STATUS_TRANSITION or rejection reason is missing}
+  /internal/v1/prescriptions:
+    get:
+      operationId: internalListPrescriptions
+      parameters: [{$ref: '#/components/parameters/InternalKey'}]
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: integer}}
+    InternalKey: {name: X-Internal-Key, in: header, required: true, schema: {type: string}}
+  responses:
+    Success: {description: Standard success envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+    Error: {description: Standard error envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+  schemas:
+    Envelope:
+      type: object
+      required: [status, data, message, errors]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {nullable: true}
+        message: {type: string}
+        errors: {type: object}
