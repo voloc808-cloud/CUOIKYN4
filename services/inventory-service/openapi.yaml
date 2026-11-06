@@ -1,0 +1,74 @@
+openapi: 3.0.3
+info: {title: PIMS Inventory Service API, version: 1.0.0}
+servers: [{url: 'http://inventory-service:8000'}]
+security: [{bearerAuth: []}]
+paths:
+  /health:
+    get: {security: [], operationId: health, responses: {'200': {description: Healthy}, '503': {description: Database unavailable}}}
+  /api/v1/import-receipts:
+    get: {operationId: listImportReceipts, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createImportReceipt, responses: {'201': {$ref: '#/components/responses/Success'}, '422': {description: BATCH_CODE_DUPLICATED or validation error}}}
+  /api/v1/batches:
+    get: {operationId: listBatches, responses: {'200': {$ref: '#/components/responses/Success'}}}
+  /api/v1/stock-movements:
+    get: {operationId: listStockMovements, responses: {'200': {$ref: '#/components/responses/Success'}}}
+  /api/v1/disposal-receipts:
+    get: {operationId: listDisposals, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createDisposal, responses: {'201': {$ref: '#/components/responses/Success'}, '422': {description: Insufficient batch stock}}}
+  /api/v1/alerts:
+    get: {operationId: listAlerts, responses: {'200': {$ref: '#/components/responses/Success'}}}
+  /api/v1/alert-settings:
+    put: {operationId: updateAlertSettings, responses: {'200': {$ref: '#/components/responses/Success'}}}
+  /internal/v1/stock/check:
+    post:
+      operationId: checkStock
+      parameters: [{$ref: '#/components/parameters/InternalKey'}]
+      responses: {'200': {$ref: '#/components/responses/Success'}, '422': {description: INSUFFICIENT_STOCK}}
+  /internal/v1/reports/stock:
+    get:
+      operationId: internalStockReport
+      parameters: [{$ref: '#/components/parameters/InternalKey'}]
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+  /internal/v1/stock/deduct-fefo:
+    post:
+      operationId: deductFefo
+      description: Atomic, row-locked and idempotent by prescription_id.
+      parameters: [{$ref: '#/components/parameters/InternalKey'}]
+      responses: {'200': {$ref: '#/components/responses/Success'}, '422': {description: INSUFFICIENT_STOCK}}
+  /internal/v1/stock/restore:
+    post:
+      operationId: restoreStock
+      description: Idempotent Saga compensation by prescription_id.
+      parameters: [{$ref: '#/components/parameters/InternalKey'}]
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+  /internal/v1/stock/prescriptions/{prescriptionId}:
+    get:
+      operationId: prescriptionStockStatus
+      description: Returns DEDUCTED, RESTORED or NOT_FOUND for Saga reconciliation.
+      parameters:
+        - {name: prescriptionId, in: path, required: true, schema: {type: integer}}
+        - {$ref: '#/components/parameters/InternalKey'}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+  /internal/v1/medicines/{medicineId}/has-batches:
+    get:
+      operationId: medicineHasBatches
+      parameters:
+        - {name: medicineId, in: path, required: true, schema: {type: integer}}
+        - {$ref: '#/components/parameters/InternalKey'}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    InternalKey: {name: X-Internal-Key, in: header, required: true, schema: {type: string}}
+  responses:
+    Success: {description: Standard success envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+  schemas:
+    Envelope:
+      type: object
+      required: [status, data, message, errors]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {nullable: true}
+        message: {type: string}
+        errors: {type: object}
