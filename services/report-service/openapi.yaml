@@ -1,0 +1,39 @@
+openapi: 3.0.3
+info: {title: PIMS Report Service API, version: 1.0.0}
+servers: [{url: 'http://report-service:8000'}]
+security: [{bearerAuth: []}]
+paths:
+  /api/v1/reports/stock:
+    get: {operationId: stockReport, responses: {'200': {description: Aggregated stock and prescription report}}}
+  /api/v1/reports/stock.xlsx:
+    get: {operationId: exportStockExcel, responses: {'200': {description: Excel workbook}}}
+  /api/v1/reports/stock.pdf:
+    get: {operationId: exportStockPdf, responses: {'200': {description: PDF document}}}
+  /health:
+    get: {security: [], operationId: health, responses: {'200': {description: Service is healthy}}}
+  /api/v1/reports/inventory:
+    get: {operationId: inventoryReport, responses: {'200': {$ref: '#/components/responses/Success'}, '503': {$ref: '#/components/responses/Unavailable'}}}
+  /api/v1/reports/import-export:
+    get: {operationId: importExportReport, responses: {'200': {$ref: '#/components/responses/Success'}, '503': {$ref: '#/components/responses/Unavailable'}}}
+  /api/v1/reports/prescriptions:
+    get: {operationId: prescriptionReport, responses: {'200': {$ref: '#/components/responses/Success'}, '503': {$ref: '#/components/responses/Unavailable'}}}
+  /api/v1/reports/export:
+    post:
+      operationId: exportReport
+      description: Exports Excel or PDF; asynchronous processing is deferred.
+      responses: {'200': {description: Binary report}, '422': {description: Invalid format}, '503': {$ref: '#/components/responses/Unavailable'}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  responses:
+    Success: {description: Standard success envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+    Unavailable: {description: A downstream read service is unavailable}
+  schemas:
+    Envelope:
+      type: object
+      required: [status, data, message, errors]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {nullable: true}
+        message: {type: string}
+        errors: {type: object}
