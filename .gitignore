@@ -6,4 +6,7 @@
 **/storage/*.key
 **/storage/logs/*.log
 **/.phpunit.result.cache
+<<<<<<< HEAD
 
+=======
+>>>>>>> 3527913bcd19ffe3ec061734a13a1fe7a457a0b8

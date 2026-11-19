@@ -23,12 +23,20 @@ services:
       start_period: 20s
 
   sqlserver-init:
+<<<<<<< HEAD
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pims_Strong_Passw0rd!}
     volumes: [./docker/sqlserver/init.sql:/init.sql:ro]
     entrypoint: ["/bin/bash", "-c"]
     command: ["/opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -i /init.sql"]
+=======
+    image: mcr.microsoft.com/mssql-tools:latest
+    environment:
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-Pims_Strong_Passw0rd!}
+    volumes: [./docker/sqlserver/init.sql:/init.sql:ro]
+    command: /opt/mssql-tools18/bin/sqlcmd -S sqlserver -U sa -P $${MSSQL_SA_PASSWORD} -C -i /init.sql
+>>>>>>> 3527913bcd19ffe3ec061734a13a1fe7a457a0b8
     networks: [pims-net]
     depends_on:
       sqlserver:
@@ -68,11 +76,19 @@ services:
     <<: *service-common
     build: {context: ., dockerfile: gateway/Dockerfile}
     env_file: gateway/.env
+<<<<<<< HEAD
     ports: ["${GATEWAY_PORT:-8080}:8000"]
+=======
+    ports: [${GATEWAY_PORT:-8080}:8000]
+>>>>>>> 3527913bcd19ffe3ec061734a13a1fe7a457a0b8
 
 networks:
   pims-net:
     driver: bridge
 
 volumes:
+<<<<<<< HEAD
   sqlserver-data:
+=======
+  sqlserver-data:
+>>>>>>> 3527913bcd19ffe3ec061734a13a1fe7a457a0b8

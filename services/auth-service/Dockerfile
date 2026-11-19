@@ -3,7 +3,11 @@ RUN apt-get update && apt-get install -y curl gnupg2 libzip-dev unixodbc-dev \
     && curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg \
     && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list \
     && apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 \
+<<<<<<< HEAD
     && pecl install sqlsrv-5.12.0 pdo_sqlsrv-5.12.0 && docker-php-ext-enable sqlsrv pdo_sqlsrv \
+=======
+    && pecl install sqlsrv pdo_sqlsrv && docker-php-ext-enable sqlsrv pdo_sqlsrv \
+>>>>>>> 3527913bcd19ffe3ec061734a13a1fe7a457a0b8
     && docker-php-ext-install bcmath zip && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/app
