@@ -22,9 +22,14 @@ final class InventoryRepository
         return ImportReceipt::with(['details.batch'])->findOrFail($id);
     }
 
-    public function batches(string $search): LengthAwarePaginator
+    public function batches(string $search, array $medicineIds = []): LengthAwarePaginator
     {
-        return Batch::when($search !== '', fn ($query) => $query->where('batch_code', 'like', "%{$search}%"))
+        return Batch::when($search !== '', fn ($query) => $query->where(function ($matches) use ($search, $medicineIds): void {
+            $matches->where('batch_code', 'like', "%{$search}%");
+            if ($medicineIds !== []) {
+                $matches->orWhereIn('medicine_id', $medicineIds);
+            }
+        }))
             ->orderBy('expires_at')->paginate(15);
     }
 

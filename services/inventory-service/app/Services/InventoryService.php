@@ -45,7 +45,24 @@ final class InventoryService
         });
         return $receipt;
     }
-    public function batches(string $search): LengthAwarePaginator { return $this->enrich($this->inventory->batches($search)); }
+    public function batches(string $search, string $token): LengthAwarePaginator
+    {
+        $medicineIds = [];
+        $search = trim($search);
+
+        if ($search !== '') {
+            $firstPage = $this->catalog->medicines($search, $token);
+            $medicineIds = array_map('intval', array_column($firstPage['data'] ?? [], 'id'));
+            $lastPage = max(1, (int) ($firstPage['last_page'] ?? 1));
+
+            for ($page = 2; $page <= $lastPage; $page++) {
+                $result = $this->catalog->medicines($search, $token, $page);
+                $medicineIds = array_merge($medicineIds, array_map('intval', array_column($result['data'] ?? [], 'id')));
+            }
+        }
+
+        return $this->enrich($this->inventory->batches($search, array_values(array_unique($medicineIds))));
+    }
     public function movements(): LengthAwarePaginator { return $this->enrich($this->inventory->movements()); }
     public function hasBatches(int $medicineId): bool { return $this->inventory->hasBatches($medicineId); }
 

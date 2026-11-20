@@ -38,6 +38,21 @@ final class CatalogClient
         return $this->get('/internal/v1/medicines/stock-thresholds', $token);
     }
 
+    public function medicines(string $search, string $token, int $page = 1): array
+    {
+        $response = $this->http->request('GET', '/api/v1/medicines', [
+            'headers' => ['Authorization' => "Bearer {$token}"],
+            'query' => compact('search', 'page'),
+        ]);
+        $payload = json_decode((string) $response->getBody(), true) ?: [];
+
+        if ($response->getStatusCode() !== 200 || ($payload['status'] ?? null) !== 'success') {
+            throw new ServiceUnavailableException('danh mục');
+        }
+
+        return $payload['data'];
+    }
+
     private function get(string $uri, string $token): array
     {
         $response = $this->http->request('GET', $uri, ['headers' => [

@@ -33,7 +33,7 @@ final class InventoryController extends Controller
 
     public function batches(Request $request)
     {
-        return ApiResponse::success($this->inventory->batches((string) $request->query('search', '')));
+        return ApiResponse::success($this->inventory->batches((string) $request->query('search', ''), (string) $request->bearerToken()));
     }
 
     public function movements()
