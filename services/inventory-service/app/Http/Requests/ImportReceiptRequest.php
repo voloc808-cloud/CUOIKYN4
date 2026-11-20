@@ -23,7 +23,7 @@ final class ImportReceiptRequest
             'items.*.batch_code' => ['required', 'string', 'max:80'],
             'items.*.manufactured_at' => ['required', 'date'],
             'items.*.expires_at' => ['required', 'date', 'after:items.*.manufactured_at'],
-            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:100000'],
             'items.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
         ], [
             'required' => ':attribute là bắt buộc.',
@@ -31,6 +31,7 @@ final class ImportReceiptRequest
             'items.min' => 'Phiếu nhập phải có ít nhất một lô.',
             'after' => 'Hạn sử dụng phải sau ngày sản xuất.',
             'gt' => 'Số lượng nhập phải lớn hơn 0.',
+            'items.*.quantity.max' => 'Số lượng mỗi lô không được vượt quá 100.000.',
         ]);
         $validator->setAttributeNames(['receipt_code' => 'Mã phiếu', 'supplier_id' => 'Nhà cung cấp', 'imported_at' => 'Ngày nhập', 'items' => 'Danh sách lô']);
         return $validator->validate();
