@@ -89,6 +89,7 @@ final class UserController extends Controller
             'email' => ['required', 'email', 'max:180'],
             'role' => ['required', 'in:DOCTOR,PHARMACIST'],
             'password' => [$creating ? 'required' : 'nullable', 'min:8', 'confirmed'],
+            'password_confirmation' => ['nullable'],
             'is_active' => ['sometimes', 'boolean'],
         ], [
             'name.required' => 'Vui lòng nhập họ tên.',

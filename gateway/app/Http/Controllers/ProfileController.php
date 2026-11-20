@@ -19,6 +19,7 @@ final class ProfileController extends Controller
         $data = $request->validate([
             'current_password' => ['required'],
             'password' => ['required', 'min:8', 'confirmed'],
+            'password_confirmation' => ['required'],
         ], [
             'current_password.required' => 'Vui lòng nhập mật khẩu hiện tại.',
             'password.required' => 'Vui lòng nhập mật khẩu mới.',
