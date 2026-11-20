@@ -68,7 +68,10 @@ final class InventoryService
 
     public function import(array $data, int $actorId, string $token): ImportReceipt
     {
-        $this->catalog->supplier((int) $data['supplier_id'], $token);
+        $supplier = $this->catalog->supplier((int) $data['supplier_id'], $token);
+        if (!(bool) ($supplier['is_active'] ?? false)) {
+            throw new BusinessException('Không thể nhập kho từ nhà cung cấp đã ngừng hoạt động', 'SUPPLIER_INACTIVE');
+        }
         $prepared = [];
         $requestKeys = [];
 
