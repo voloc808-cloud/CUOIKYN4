@@ -79,7 +79,11 @@ final class InventoryService
 
             $medicine = $this->catalog->medicine((int) $item['medicine_id'], $token);
             $factor = $this->conversionFactor($medicine, (int) $item['unit_id']);
-            $prepared[] = [$item, $medicine, (float) $item['quantity'] * $factor];
+            $normalizedQuantity = (float) $item['quantity'] * $factor;
+            if ($normalizedQuantity > BatchRules::MAX_QUANTITY) {
+                throw new BusinessException('Số lượng sau quy đổi không được vượt quá 100.000 đơn vị kho', 'INVALID_BATCH_QUANTITY');
+            }
+            $prepared[] = [$item, $medicine, $normalizedQuantity];
         }
 
         return DB::transaction(function () use ($data, $actorId, $prepared): ImportReceipt {

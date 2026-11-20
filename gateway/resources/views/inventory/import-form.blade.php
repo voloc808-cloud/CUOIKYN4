@@ -25,7 +25,7 @@
     <div class="col-md-2"><label class="form-label">NSX</label><input type="date" class="form-control" data-field="manufactured_at" required></div>
     <div class="col-md-2"><label class="form-label">HSD</label><input type="date" class="form-control" data-field="expires_at" required></div>
     <div class="col-md-1"><button type="button" class="btn btn-outline-danger remove-row">×</button></div>
-    <div class="col-md-3"><label class="form-label">Số lượng</label><input type="number" step="0.001" min="0.001" class="form-control" data-field="quantity" required></div>
+    <div class="col-md-3"><label class="form-label">Số lượng</label><input type="number" step="0.001" min="0.001" class="form-control" data-field="quantity" max="100000" title="Tối đa 100.000 đơn vị mỗi lô" required><div class="form-text">Tối đa 100.000 đơn vị mỗi lô.</div></div>
     <div class="col-md-3"><label class="form-label">Đơn giá</label><input type="number" step="0.01" min="0" class="form-control" data-field="unit_cost" value="0"></div>
     <div class="col-md-6 small text-secondary conversion-note"></div>
 </div>
