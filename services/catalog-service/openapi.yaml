@@ -1,0 +1,69 @@
+openapi: 3.0.3
+info: {title: PIMS Catalog Service API, version: 1.0.0}
+servers: [{url: 'http://catalog-service:8000'}]
+security: [{bearerAuth: []}]
+paths:
+  /internal/v1/medicines/stock-thresholds:
+    get: {operationId: medicineStockThresholds, responses: {'200': {description: Active medicines and minimum stock thresholds}}}
+  /health:
+    get: {security: [], operationId: health, responses: {'200': {description: Healthy}, '503': {description: Database unavailable}}}
+  /api/v1/medicines:
+    get: {operationId: listMedicines, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createMedicine, responses: {'201': {$ref: '#/components/responses/Success'}, '422': {$ref: '#/components/responses/Error'}}}
+  /api/v1/medicines/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get: {operationId: getMedicine, responses: {'200': {$ref: '#/components/responses/Success'}, '404': {$ref: '#/components/responses/Error'}}}
+    put: {operationId: updateMedicine, responses: {'200': {$ref: '#/components/responses/Success'}, '422': {$ref: '#/components/responses/Error'}}}
+    delete: {operationId: deleteMedicine, responses: {'200': {$ref: '#/components/responses/Success'}, '422': {description: MEDICINE_HAS_BATCHES}, '503': {description: INVENTORY_CHECK_REQUIRED until inventory orchestration is available}}}
+  /api/v1/units:
+    get: {operationId: listUnits, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createUnit, responses: {'201': {$ref: '#/components/responses/Success'}}}
+  /api/v1/unit-conversions:
+    get: {operationId: listUnitConversions, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createUnitConversion, responses: {'201': {$ref: '#/components/responses/Success'}}}
+  /api/v1/suppliers:
+    get: {operationId: listSuppliers, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    post: {operationId: createSupplier, responses: {'201': {$ref: '#/components/responses/Success'}}}
+  /api/v1/suppliers/{id}:
+    parameters: [{$ref: '#/components/parameters/Id'}]
+    get: {operationId: getSupplier, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    put: {operationId: updateSupplier, responses: {'200': {$ref: '#/components/responses/Success'}}}
+    delete: {operationId: deleteSupplier, responses: {'200': {$ref: '#/components/responses/Success'}}}
+  /internal/v1/medicines/{id}:
+    get:
+      operationId: internalGetMedicine
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+        - {$ref: '#/components/parameters/InternalKey'}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+    delete:
+      operationId: internalDeleteVerifiedMedicine
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+        - {$ref: '#/components/parameters/InternalKey'}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+  /internal/v1/suppliers/{id}:
+    get:
+      operationId: internalGetSupplier
+      parameters:
+        - {$ref: '#/components/parameters/Id'}
+        - {$ref: '#/components/parameters/InternalKey'}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  parameters:
+    Id: {name: id, in: path, required: true, schema: {type: integer}}
+    InternalKey: {name: X-Internal-Key, in: header, required: true, schema: {type: string}}
+  responses:
+    Success: {description: Standard success envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+    Error: {description: Standard error envelope, content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}}
+  schemas:
+    Envelope:
+      type: object
+      required: [status, data, message, errors]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {nullable: true}
+        message: {type: string}
+        errors: {type: object}

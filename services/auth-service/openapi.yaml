@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: PIMS Auth Service API
+  version: 1.0.0
+servers:
+  - url: http://auth-service:8000
+tags:
+  - {name: Authentication}
+  - {name: Accounts}
+paths:
+  /health:
+    get:
+      operationId: health
+      responses:
+        '200': {description: Service and database are healthy}
+        '503': {$ref: '#/components/responses/ServiceUnavailable'}
+  /api/v1/auth/login:
+    post:
+      tags: [Authentication]
+      operationId: login
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+        '401': {$ref: '#/components/responses/Error'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /api/v1/auth/logout:
+    post:
+      security: [{bearerAuth: []}]
+      tags: [Authentication]
+      operationId: logout
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+  /api/v1/auth/change-password:
+    put:
+      security: [{bearerAuth: []}]
+      tags: [Authentication]
+      operationId: changePassword
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /api/v1/users:
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: listUsers
+      responses:
+        '200': {$ref: '#/components/responses/Success'}
+    post:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: createUser
+      responses:
+        '201': {$ref: '#/components/responses/Success'}
+        '422': {$ref: '#/components/responses/ValidationError'}
+  /api/v1/users/{id}:
+    parameters:
+      - {name: id, in: path, required: true, schema: {type: integer}}
+    get:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: getUser
+      responses: {'200': {$ref: '#/components/responses/Success'}, '404': {$ref: '#/components/responses/Error'}}
+    put:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: updateUser
+      responses: {'200': {$ref: '#/components/responses/Success'}, '422': {$ref: '#/components/responses/ValidationError'}}
+    delete:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: deleteUser
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+  /api/v1/users/{id}/status:
+    patch:
+      security: [{bearerAuth: []}]
+      tags: [Accounts]
+      operationId: changeUserStatus
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: integer}}
+      responses: {'200': {$ref: '#/components/responses/Success'}}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}
+  responses:
+    Success:
+      description: Successful response
+      content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}
+    Error:
+      description: Business or authentication error
+      content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}
+    ValidationError:
+      description: Vietnamese validation errors
+      content: {application/json: {schema: {$ref: '#/components/schemas/Envelope'}}}
+    ServiceUnavailable:
+      description: Database unavailable
+  schemas:
+    Envelope:
+      type: object
+      required: [status, data, message, errors]
+      properties:
+        status: {type: string, enum: [success, error]}
+        data: {nullable: true}
+        message: {type: string}
+        errors: {type: object}
