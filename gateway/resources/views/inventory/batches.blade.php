@@ -9,7 +9,7 @@
 @forelse(($batches['data'] ?? []) as $batch)
 @php($expiryTimestamp = strtotime($batch['expires_at']))
 <tr><td><strong>{{ $batch['medicine']['name'] ?? '#'.$batch['medicine_id'] }}</strong><small class="d-block text-secondary">{{ $batch['medicine']['code'] ?? '' }}</small></td><td>{{ $batch['batch_code'] }}</td><td>{{ date('d/m/Y', strtotime($batch['manufactured_at'])) }}</td><td>{{ date('d/m/Y', $expiryTimestamp) }}</td><td>{{ $batch['quantity_imported'] }}</td><td class="fw-semibold">{{ $batch['quantity_remaining'] }}</td><td>
-@if($expiryTimestamp < time())<span class="badge text-bg-danger">Đã hết hạn</span>@elseif($expiryTimestamp <= strtotime('+30 days'))<span class="badge text-bg-warning">Sắp hết hạn</span>@else<span class="badge text-bg-success">Còn hạn</span>@endif
+@if((float) $batch['quantity_remaining'] <= 0)<span class="badge text-bg-secondary">Hết tồn</span>@elseif($expiryTimestamp < time())<span class="badge text-bg-danger">Đã hết hạn</span>@elseif($expiryTimestamp <= strtotime('+30 days'))<span class="badge text-bg-warning">Sắp hết hạn</span>@else<span class="badge text-bg-success">Còn hạn</span>@endif
 </td></tr>
 @empty<tr><td colspan="7" class="text-center text-secondary py-4">Chưa có lô trong kho.</td></tr>@endforelse
 </tbody></table></div>@include('partials.pagination', ['paginator' => $batches])

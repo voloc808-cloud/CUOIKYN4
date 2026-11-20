@@ -92,7 +92,16 @@ final class InventoryController extends Controller
 
     public function storeDisposal(Request $request)
     {
-        $data = $request->validate(['receipt_code' => ['required','max:50'], 'disposed_at' => ['required','date'], 'reason' => ['required','max:1000'], 'items' => ['required','array','min:1'], 'items.*.batch_id' => ['required','integer','distinct'], 'items.*.quantity' => ['required','numeric','gt:0']]);
+        $data = $request->validate([
+            'receipt_code' => ['required', 'max:50'],
+            'disposed_at' => ['required', 'date', 'before_or_equal:now'],
+            'reason' => ['required', 'max:1000'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.batch_id' => ['required', 'integer', 'distinct'],
+            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
+        ], [
+            'disposed_at.before_or_equal' => 'Thời gian xuất hủy không được lớn hơn thời điểm hiện tại.',
+        ]);
         try { $receipt = $this->inventory->createDisposal($this->token($request), $data); return redirect()->route('inventory.disposals.show', $receipt['id'])->with('success', 'Xuất hủy thành công.'); }
         catch (ServiceApiException|ServiceUnavailableException $exception) { return back()->withInput()->with('error', $exception->getMessage()); }
     }

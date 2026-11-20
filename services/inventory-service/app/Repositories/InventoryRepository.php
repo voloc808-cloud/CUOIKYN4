@@ -30,7 +30,7 @@ final class InventoryRepository
                 $matches->orWhereIn('medicine_id', $medicineIds);
             }
         }))
-            ->orderBy('expires_at')->paginate(15);
+            ->orderBy('expires_at')->orderBy('id')->paginate(15);
     }
 
     public function movements(): LengthAwarePaginator
